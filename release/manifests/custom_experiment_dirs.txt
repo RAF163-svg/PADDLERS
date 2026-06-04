@@ -1,0 +1,11 @@
+paddlers/deeplabv3_data_split
+paddlers/deeplabv3_gid_nromal
+paddlers/farseg_data_split
+paddlers/farseg_gid15_normal
+paddlers/fastscnn_data_split
+paddlers/fastscnn_gid15_normal
+paddlers/fastseg_gid15_nromal
+paddlers/hrnet_data_split
+paddlers/hrnet_gid15_normal
+paddlers/unet_data_split
+DORGM

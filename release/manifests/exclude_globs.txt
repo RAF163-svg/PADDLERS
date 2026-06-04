@@ -1,0 +1,13 @@
+.git/
+__pycache__/
+output/
+**/output/
+**/*.log
+**/*.pdparams
+**/*.pdopt
+**/*.pdstates
+**/*.pyc
+**/vdl_log/
+**/distributed_logs/
+release/runs/
+release/validation/

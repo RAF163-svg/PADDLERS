@@ -1,0 +1,68 @@
+# Local tool files
+.codex
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Training outputs
+output/
+**/output/
+**/output_stable/
+**/runs/
+**/validation/
+**/checkpoints/
+**/best_model/
+**/latest_model/
+**/vdl_log/
+**/distributed_logs/
+**/prediction_samples/
+**/config_snapshot/
+
+# Model weights and exported models
+*.pdparams
+*.pdopt
+*.pdstates
+*.pth
+*.onnx
+*.inference.pdmodel
+*.inference.pdiparams
+
+# Logs
+*.log
+*.out
+*.pid
+
+# Numpy cache
+*.npy
+*.npz
+
+# Large data / archives
+*.zip
+*.tar
+*.tar.gz
+*.gz
+*.7z
+*.rar
+
+# Dataset files
+data/
+datasets/
+raw_data/
+
+# Optional local release outputs
+release/runs/
+release/validation/

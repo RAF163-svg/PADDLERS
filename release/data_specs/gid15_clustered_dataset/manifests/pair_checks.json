@@ -1,0 +1,106 @@
+{
+  "cluster_0": {
+    "train": {
+      "image_count": 3064,
+      "mask_count": 3064,
+      "list_count": 3064,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    },
+    "val": {
+      "image_count": 713,
+      "mask_count": 713,
+      "list_count": 713,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    },
+    "test": {
+      "image_count": 649,
+      "mask_count": 649,
+      "list_count": 649,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    }
+  },
+  "cluster_1": {
+    "train": {
+      "image_count": 3874,
+      "mask_count": 3874,
+      "list_count": 3874,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    },
+    "val": {
+      "image_count": 836,
+      "mask_count": 836,
+      "list_count": 836,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    },
+    "test": {
+      "image_count": 899,
+      "mask_count": 899,
+      "list_count": 899,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    }
+  },
+  "cluster_2": {
+    "train": {
+      "image_count": 2099,
+      "mask_count": 2099,
+      "list_count": 2099,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    },
+    "val": {
+      "image_count": 497,
+      "mask_count": 497,
+      "list_count": 497,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    },
+    "test": {
+      "image_count": 441,
+      "mask_count": 441,
+      "list_count": 441,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    }
+  },
+  "cluster_3": {
+    "train": {
+      "image_count": 1127,
+      "mask_count": 1127,
+      "list_count": 1127,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    },
+    "val": {
+      "image_count": 198,
+      "mask_count": 198,
+      "list_count": 198,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    },
+    "test": {
+      "image_count": 123,
+      "mask_count": 123,
+      "list_count": 123,
+      "image_mask_stem_mismatch_count": 0,
+      "images_missing_mask": [],
+      "masks_missing_image": []
+    }
+  }
+}
