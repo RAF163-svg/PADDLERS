@@ -1,437 +1,246 @@
-简体中文 | [English](README_EN.md)
+# PaddleRS-GID15 遥感语义分割实验项目
 
-<div align="center">
-  <p align="center">
-    <img src="./docs/images/logo.png" align="middle" width = "500" />
-  </p>
+本仓库是一个基于 [PaddleRS](https://github.com/PaddlePaddle/PaddleRS) 的 GID15 遥感语义分割实验项目。它不是原始 PaddleRS 官方 README 的简单镜像，而是把我在 GID15 数据集上做过的模型实验、routed UNet 主线代码、可移植配置和实验结果整理成一个适合复现和继续开发的代码仓库。
 
-  **飞桨高性能、多任务遥感影像智能解译开发套件，端到端完成从数据到部署的全流程遥感应用**
-
-  [![version](https://img.shields.io/github/release/PaddlePaddle/PaddleRS.svg)](https://github.com/PaddlePaddle/PaddleRS/releases)
-  [![license](https://img.shields.io/badge/license-Apache%202-blue.svg)](LICENSE)
-  ![python version](https://img.shields.io/badge/python-3.7+-orange.svg)
-  ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
-</div>
-
-## GID15 Experiment Results
-
-This clean repository documents the GID15 semantic segmentation experiments without bundling trained model weights or training outputs. The full Chinese summary is available in [docs/EXPERIMENT_RESULTS.md](docs/EXPERIMENT_RESULTS.md), with a machine-readable table in [docs/experiment_results_summary.tsv](docs/experiment_results_summary.tsv).
-
-Model weights are intentionally excluded from GitHub. They should be released separately and placed under `release/runs/unet_singlehead/best_model/` or `release/runs/unet_multihead/best_model/` before running `infer_best_model.py`.
-
-| Experiment | Model | Type | mIoU | OA/accuracy | Kappa |
-| --- | --- | --- | ---: | ---: | ---: |
-| deeplabv3_gid_nromal/output | DeepLabV3+ | GID15 normal baseline | 0.526867 | 0.786168 | 0.732505 |
-| fastseg_gid15_nromal/output | FactSeg/FastSeg | GID15 normal baseline | 0.129983 | 0.465505 | 0.188082 |
-| farseg_gid15_normal/output | FarSeg | GID15 normal baseline | 0.507928 | 0.757180 | 0.697622 |
-| fastscnn_gid15_normal/output | FastSCNN | GID15 normal baseline | 0.469304 | 0.736937 | 0.668483 |
-| hrnet_gid15_normal/output | HRNet | GID15 normal baseline | 0.430103 | 0.722239 | 0.649383 |
-| hrnet_gid15_normal/output_stable | HRNet | GID15 normal baseline | 0.474284 | 0.714009 | 0.617053 |
-| unet_data_split/multihead | UNet | cluster-routed multihead | 0.383720 | 0.723863 | 0.626882 |
-| unet_data_split/singlehead | UNet | cluster-routed singlehead | 0.378758 | 0.724935 | 0.630498 |
-| deeplabv3_data_split/output | DeepLabV3+ | cluster-routed data_split | 0.025525 | 0.025073 | - |
-| deeplabv3_gid_nromal/archive_oversample_mixloss_20260325_165404 | DeepLabV3+ | archive baseline | 0.451574 | 0.712147 | 0.615652 |
-
-## <img src="docs/images/seg_news_icon.png" width="30"/> 最新动态
-
-*  [2022-11-09] 🔥 PaddleRS发布1.0正式版本，详细发版信息请参考[Release Note](https://github.com/PaddlePaddle/PaddleRS/releases)。
-*  [2022-05-19] 🔥 PaddleRS发布1.0-beta版本，全面支持遥感领域深度学习任务。详细发版信息请参考[Release Note](https://github.com/PaddlePaddle/PaddleRS/releases)。
-
-## <img src="docs/images/intro.png" width="30"/> 简介
-
-PaddleRS是百度飞桨、遥感科研院所及相关高校共同开发的基于飞桨的遥感影像智能解译开发套件，支持**图像分割、目标检测、场景分类、变化检测、图像复原**等常见遥感任务。PaddleRS致力于帮助遥感领域科研从业者快速完成算法的研发、验证和调优。同时，PaddleRS也期望助力投身于产业实践的开发者，便捷地实现从数据预处理到模型部署的**全流程遥感深度学习应用**。
-
-<div align="center">
-<img src="https://user-images.githubusercontent.com/21275753/199727309-796b0b14-1af7-4cea-9a22-c5439766446b.gif"  width = "2000" />  
-</div>
-
-## <img src="./docs/images/feature.png" width="30"/> 特性
-
-PaddleRS具有以下五大特色：
-
-* <img src="./docs/images/f1.png" width="20"/> **丰富的视觉与遥感特色模型库**：集成飞桨四大视觉套件的成熟模型库，同时支持FarSeg、BIT、ChangeStar等众多遥感领域深度学习模型，覆盖图像分割、目标检测、场景分类、变化检测、图像复原等任务。
-
-* <img src="./docs/images/f1.png" width="20"/> **对遥感领域专有任务的支持**：支持包括变化检测在内的遥感领域特色任务，提供完善的训练、部署教程以及丰富的实践案例。
-
-* <img src="./docs/images/f2.png" width="20"/> **针对遥感影像大幅面性质的优化**：支持大幅面影像滑窗推理，使用内存延迟载入技术提升性能；支持对大幅面影像地理坐标信息的读写。
-
-* <img src="./docs/images/f2.png" width="20"/> **顾及遥感特性与地学知识的数据预处理**：针对遥感数据特点，提供对包含任意数量波段的数据以及多时相数据的预处理功能，支持影像配准、辐射校正、波段选择等遥感数据预处理方法，支持50余种遥感指数的提取与知识融入。
-
-* <img src="./docs/images/f3.png" width="20"/> **工业级训练与部署性能**：支持多进程异步I/O、多卡并行训练等加速策略，结合飞桨核心框架的显存优化功能，可大幅度减少模型的训练开销，帮助开发者以更低成本、更高效地完成遥感的开发和训练。
-
-<div align="center">
-<img src="docs/images/whole_picture.png"  width = "2000" />  
-</div>
-
-## <img src="./docs/images/chat.png" width="30"/> 技术交流
-
-* 如果您发现任何PaddleRS存在的问题或是对PaddleRS有建议, 欢迎通过[GitHub Issues](https://github.com/PaddlePaddle/PaddleRS/issues)向我们提出。
-* 欢迎加入PaddleRS微信群：
-<div align="center">
-<img src="https://user-images.githubusercontent.com/21275753/213844144-11ed841b-f71b-43a6-8e11-020883deee0a.jpg"  width = "150" />  
-</div>
-
-## <img src="./docs/images/model.png" width="30"/> 产品矩阵
-
-<table align="center">
-  <tbody>
-    <tr align="center" valign="bottom">
-      <td>
-        <b>模型库</b>
-      </td>
-      <td>
-        <b>数据变换算子</b>
-      </td>
-      <td>
-        <b>遥感特色工具</b>
-      </td>
-      <td>
-        <b>实践案例</b>
-      </td>
-    </tr>
-    <tr valign="top">
-      <td>
-        <details><summary><b>变化检测</b></summary>
-        <ul>
-          <li><a href="./tutorials/train/change_detection/bit.py">BIT</a></li>
-          <li><a href="./tutorials/train/change_detection/cdnet.py">CDNet</a></li>
-          <li><a href="./tutorials/train/change_detection/changeformer.py">ChangeFormer</a></li>
-          <li><a href="./paddlers/rs_models/cd/changestar.py">ChangeStar</a></li>
-          <li><a href="./tutorials/train/change_detection/dsamnet.py">DSAMNet</a></li>
-          <li><a href="./tutorials/train/change_detection/dsifn.py">DSIFN</a></li>
-          <li><a href="./tutorials/train/change_detection/fc_ef.py">FC-EF</a></li>
-          <li><a href="./tutorials/train/change_detection/fc_siam_conc.py">FC-Siam-conc</a></li>
-          <li><a href="./tutorials/train/change_detection/fc_siam_diff.py">FC-Siam-diff</a></li>
-          <li><a href="./tutorials/train/change_detection/fccdn.py">FCCDN</a></li>
-          <li><a href="./tutorials/train/change_detection/p2v.py">P2V-CD</a></li>
-          <li><a href="./tutorials/train/change_detection/snunet.py">SNUNet</a></li>
-          <li><a href="./tutorials/train/change_detection/stanet.py">STANet</a></li>
-        </ul>
-        </details>
-        <details><summary><b>场景分类</b></summary>
-        <ul>
-          <li><a href="./tutorials/train/classification/condensenetv2.py">CondenseNet V2</a></li>
-          <li><a href="./tutorials/train/classification/hrnet.py">HRNet</a></li>
-          <li><a href="./tutorials/train/classification/mobilenetv3.py">MobileNetV3</a></li>
-          <li><a href="./tutorials/train/classification/resnet50_vd.py">ResNet50-vd</a></li>
-        </ul>
-        </details>
-        <details><summary><b>图像复原</b></summary>
-        <ul>
-          <li><a href="./tutorials/train/image_restoration/drn.py">DRN</a></li>
-          <li><a href="./tutorials/train/image_restoration/esrgan.py">ESRGAN</a></li>
-          <li><a href="./tutorials/train/image_restoration/lesrcnn.py">LESRCNN</a></li>
-          <li><a href="./tutorials/train/image_restoration/nafnet.py">NAFNet</a></li>
-          <li><a href="./tutorials/train/image_restoration/swinir.py">SwinIR</a></li>
-        </ul>
-        </details>
-        <details><summary><b>目标检测</b></summary>
-        <ul>
-          <li><a href="./tutorials/train/object_detection/faster_rcnn.py">Faster R-CNN</a></li>
-          <li><a href="./tutorials/train/object_detection/fcosr.py">FCOSR</a></li>
-          <li><a href="./tutorials/train/object_detection/ppyolo.py">PP-YOLO</a></li>
-          <li><a href="./tutorials/train/object_detection/ppyolo_tiny.py">PP-YOLO Tiny</a></li>
-          <li><a href="./tutorials/train/object_detection/ppyolov2.py">PP-YOLOv2</a></li>
-          <li><a href="./tutorials/train/object_detection/yolov3.py">YOLOv3</a></li>
-        </ul>
-        </details>
-        <details><summary><b>图像分割</b></summary>
-        <ul>
-          <li><a href="./tutorials/train/semantic_segmentation/bisenetv2.py">BiSeNet V2</a></li>
-          <li><a href="./tutorials/train/semantic_segmentation/deeplabv3p.py">DeepLab V3+</a></li>
-          <li><a href="./tutorials/train/semantic_segmentation/factseg.py">FactSeg</a></li>
-          <li><a href="./tutorials/train/semantic_segmentation/farseg.py">FarSeg</a></li>
-          <li><a href="./tutorials/train/semantic_segmentation/fast_scnn.py">Fast-SCNN</a></li>
-          <li><a href="./tutorials/train/semantic_segmentation/hrnet.py">HRNet</a></li>
-          <li><a href="./tutorials/train/semantic_segmentation/unet.py">UNet</a></li>
-        </ul>
-        </details>
-      </td>
-      <td>
-        <details><summary><b>数据预处理</b></summary>
-        <ul>
-          <li>CenterCrop</li>
-          <li>Dehaze（影像去雾）</li>
-          <li>MatchRadiance（辐射校正）</li>
-          <li>Normalize</li>
-          <li>Pad</li>
-          <li>ReduceDim（高光谱降维）</li>
-          <li>Resize</li>
-          <li>ResizeByLong</li>
-          <li>ResizeByShort</li>
-          <li>SelectBand（波段选择）</li>
-          <li><a href="./docs/intro/transforms_cn.md">...</a></li>
-        </ul>
-        </details>
-        <details><summary><b>数据增强</b></summary>
-        <ul>
-          <li>AppendIndex（遥感指数计算）</li>
-          <li>MixupImage</li>
-          <li>RandomBlur</li>
-          <li>RandomCrop</li>
-          <li>RandomDistort</li>
-          <li>RandomExpand</li>
-          <li>RandomHorizontalFlip</li>
-          <li>RandomResize</li>
-          <li>RandomResizeByShort</li>
-          <li>RandomScaleAspect</li>
-          <li>RandomSwap（随机时序交换）</li>
-          <li>RandomVerticalFlip</li>
-          <li><a href="./docs/intro/transforms_cn.md">...</a></li>
-        </ul>
-        </details>
-        <details><summary><b>遥感指数</b></summary>
-        <ul>
-          <li>ARI</li>
-          <li>ARI2</li>
-          <li>ARVI</li>
-          <li>AWEInsh</li>
-          <li>AWEIsh</li>
-          <li>BAI</li>
-          <li>BI</li>
-          <li>BLFEI</li>
-          <li>BNDVI</li>
-          <li>BWDRVI</li>
-          <li>BaI</li>
-          <li>CIG</li>
-          <li>CSI</li>
-          <li>CSIT</li>
-          <li>DBI</li>
-          <li>DBSI</li>
-          <li>DVI</li>
-          <li>EBBI</li>
-          <li>EVI</li>
-          <li>EVI2</li>
-          <li>FCVI</li>
-          <li>GARI</li>
-          <li>GBNDVI</li>
-          <li>GLI</li>
-          <li>GRVI</li>
-          <li>IPVI</li>
-          <li>LSWI</li>
-          <li>MBI</li>
-          <li>MGRVI</li>
-          <li>MNDVI</li>
-          <li>MNDWI</li>
-          <li>MSI</li>
-          <li>NBLI</li>
-          <li>NDVI</li>
-          <li>NDWI</li>
-          <li>NDYI</li>
-          <li>NIRv</li>
-          <li>PSRI</li>
-          <li>RI</li>
-          <li>SAVI</li>
-          <li>SWI</li>
-          <li>TDVI</li>
-          <li>UI</li>
-          <li>VIG</li>
-          <li>WI1</li>
-          <li>WI2</li>
-          <li>WRI</li>
-          <li><a href="./docs/intro/indices_cn.md">...</a></li>
-        </ul>
-        </details>
-      </td>
-      <td>
-        <details><summary><b>数据格式转换</b></summary>
-        <ul>
-          <li><a href="./tools/coco2mask.py">COCO to mask</a></li>
-          <li><a href="./tools/geojson2mask.py">GeoJSON to mask</a></li>
-          <li><a href="./tools/mask2shape.py">mask to shapefile</a></li>
-        </ul>
-        </details>
-        <details><summary><b>数据集制作</b></summary>
-        <ul>
-          <li><a href="./tools/extract_ms_patches.py">四叉树索引切片</a></li>
-          <li><a href="./tools/match.py">影像配准</a></li>
-          <li><a href="./tools/oif.py">波段选择</a></li>
-          <li><a href="./tools/pca.py">波段融合</a></li>
-          <li><a href="./tools/split.py">影像切片</a></li>
-        </ul>
-        </details>
-        </details>
-        <details><summary><b>数据后处理</b></summary>
-        <ul>
-          <li><a href="./paddlers/utils/postprocs/change_filter.py">变化检测误检点过滤</a></li>
-          <li><a href="./paddlers/utils/postprocs/connection.py">道路断线连接</a></li>
-          <li><a href="./paddlers/utils/postprocs/crf.py">基于条件随机场的分割结果优化</a></li>
-          <li><a href="./paddlers/utils/postprocs/mrf.py">基于马尔可夫随机场的分割结果优化</a></li>
-          <li><a href="./paddlers/utils/postprocs/regularization.py">建筑边界规则化</a></li>
-        </ul>
-        </details>
-        <details><summary><b>数据可视化</b></summary>
-        <ul>
-          <li><a href="./paddlers/utils/visualize.py">地图-栅格可视化</a></li>
-        </ul>
-        </details>
-        <details><summary><b>开源数据集预处理</b></summary>
-        <ul>
-          <li><a href="./tools/prepare_dataset/prepare_levircd.py">LEVIR-CD</a></li>
-          <li><a href="./tools/prepare_dataset/prepare_svcd.py">Season-varying</a></li>
-          <li><a href="./tools/prepare_dataset/prepare_ucmerced.py">UC Merced</a></li>
-          <li><a href="./tools/prepare_dataset/prepare_rsod.py">RSOD</a></li>
-          <li><a href="./tools/prepare_dataset/prepare_isaid.py">iSAID</a></li>
-          <li><a href="./docs/intro/data_prep_cn.md">...</a></li>
-        </ul>
-      </td>
-      <td>
-      <details><summary><b>官方案例</b></summary>
-      <ul>
-        <li><a href="./examples/rs_research/README.md">PaddleRS科研实战：设计深度学习变化检测模型</a></li>
-        <li><a href="./examples/c2fnet/README.md">基于PaddleRS的遥感图像小目标语义分割优化方法</a></li>
-        <li><a href="./examples/building_extraction/README.md">建筑物提取全流程案例</a></li>
-      </ul>
-      </details>
-      <details><summary><b>社区案例</b></summary>
-      <ul>
-      <li><a href="./examples/README.md">PaddleRS实践案例库</a></li>
-      </ul>
-      </details>
-      </td>  
-    </tr>
-  </tbody>
-</table>
-
-## <img src="./docs/images/teach.png" width="30"/> 教程与文档
-
-* 快速上手
-  * [快速上手PaddleRS](./docs/quick_start_cn.md)
-* 数据准备
-  * [快速了解遥感与遥感数据](./docs/data/rs_data_cn.md)
-  * [开源遥感数据集汇总表](./docs/data/dataset_cn.md)
-  * [智能标注工具EISeg](https://github.com/PaddlePaddle/PaddleSeg/tree/release/2.7/EISeg)
-  * [遥感影像处理工具集](./docs/data/tools_cn.md)
-* 组件介绍
-  * [数据集预处理脚本](./docs/intro/data_prep_cn.md)
-  * [模型库](./docs/intro/model_zoo_cn.md)
-  * [遥感指数](./docs/intro/indices_cn.md)
-  * [数据变换算子](./docs/intro/transforms_cn.md)
-* [模型训练](./tutorials/train/README_CN.md)
-* 模型部署
-  * [模型导出](./deploy/export/README.md)
-  * [Python部署](./deploy/README.md)
-  * [遥感影像智能解译工具GeoView](https://github.com/PaddleCV-SIG/GeoView)
-* 代码贡献
-  * [贡献指南](./docs/CONTRIBUTING_CN.md)
-  * [开发指南](./docs/dev/dev_guide_cn.md)
-  * [代码注释规范](./docs/dev/docstring_cn.md)
-  * [模型训练API说明](./docs/apis/train_cn.md)
-  * [模型推理API说明](./docs/apis/infer_cn.md)
-
-## <img src="./docs/images/anli.png" width="30"/> 实践案例
-
-* [PaddleRS科研实战：设计深度学习变化检测模型](./examples/rs_research/README.md)
-* [基于PaddleRS的遥感图像小目标语义分割优化方法](./examples/c2fnet/README.md)
-
-更多案例请参考[PaddleRS实践案例库](./examples/README.md)。
-
-## 许可证书
-
-本项目的发布受[Apache 2.0 license](./LICENSE)许可认证。
-
-## <img src="./docs/images/love.png" width="30"/> 开源贡献
-
-* 非常感谢国家对地观测科学数据中心、中国科学院空天信息创新研究院、北京航空航天大学、武汉大学、中国石油大学（华东）、中国地质大学、中国四维、航天宏图、中科星图、超图等单位对PaddleRS项目的贡献。注：排名不分先后。
-* 非常感谢[geoyee](https://github.com/geoyee)(陈奕州)，[kongdebug](https://github.com/kongdebug)(孔远杭)，[huilin16](https://github.com/huilin16)(赵慧琳)等开发者对PaddleRS项目的贡献。
-
-## <img src="./docs/images/yinyong.png" width="30"/> 学术引用
-
-如果我们的项目在学术上帮助到您，请考虑以下引用：
-
-```latex
-@misc{paddlers2022,
-    title={PaddleRS, Awesome Remote Sensing Toolkit based on PaddlePaddle},
-    author={PaddlePaddle Authors},
-    howpublished = {\url{https://github.com/PaddlePaddle/PaddleRS}},
-    year={2022}
-}
-```
-
-## GID15 Routed UNet Experiment
-
-This clean GitHub version adds a GID15 routed UNet experiment line on top of PaddleRS.
-
-Main code:
+当前主线代码位于：
 
 ```text
 paddlers/unet_data_split/
 ```
 
-Portable configs:
+完整实验结果见：[docs/EXPERIMENT_RESULTS.md](docs/EXPERIMENT_RESULTS.md)
+
+机器可读结果表见：[docs/experiment_results_summary.tsv](docs/experiment_results_summary.tsv)
+
+## 1. 项目简介
+
+本项目围绕 GID15 遥感语义分割任务，整理并对比了多组模型实验，包括：
+
+- UNet
+- DeepLabV3 / DeepLabV3+
+- FarSeg
+- FastSCNN
+- FastSeg
+- HRNet
+- GID15 normal baseline
+- cluster-routed / data-split 实验
+- single-head routed UNet
+- multi-head routed UNet
+
+当前主要交付线是 `paddlers/unet_data_split/` 下的 routed UNet。它包含 single-head baseline 和 multi-head routed 两种设置，配套了训练、评估、推理、指标统计和 portable config。
+
+## 2. 我在原 PaddleRS 基础上做了什么
+
+- 新增 GID15 数据集实验流程。
+- 新增 cluster-routed 数据划分与加载逻辑。
+- 新增 single-head / multi-head routed UNet 模型。
+- 新增训练、评估、推理脚本。
+- 整理 UNet、DeepLabV3+、FarSeg、FastSCNN、FastSeg、HRNet 等多组模型实验结果。
+- 提供 portable config，避免运行时依赖本机绝对路径。
+- 将模型权重、checkpoint 和训练输出从代码仓库中剥离，方便 GitHub 代码管理。
+
+## 3. 仓库内容
 
 ```text
-release/configs/
+PaddleRS-GID15/
+├── paddlers/unet_data_split/      # 当前主线实验代码
+├── release/configs/               # 可移植训练配置
+├── release/scripts/               # 训练和检查脚本
+├── release/docs/                  # 运行说明
+├── docs/EXPERIMENT_RESULTS.md     # 完整实验结果
+├── docs/experiment_results_summary.tsv
+├── paddlers/                      # PaddleRS 核心源码
+├── tools/                         # 工具脚本
+├── tests/                         # 测试代码
+└── README.md
 ```
 
-Environment file:
+## 4. 实验结果总览
+
+下面只放 README 首页摘要。所有数值均来自 `docs/experiment_results_summary.tsv`，没有补填或估算。更多历史实验、smoke/probe 记录和指标来源请看 [完整实验结果](docs/EXPERIMENT_RESULTS.md)。
+
+| 模型 | 实验类型 | mIoU | Accuracy | Kappa | best model | 备注 |
+|---|---|---:|---:|---:|---|---|
+| UNet | multi-head routed | 0.383720 | 0.723863 | 0.626882 | 是 | 当前主线 |
+| UNet | single-head routed | 0.378758 | 0.724935 | 0.630498 | 是 | 当前主线 |
+| DeepLabV3+ | GID15 normal baseline | 0.526867 | 0.786168 | 0.732505 | 是 | 历史对照 |
+| FarSeg | GID15 normal baseline | 0.507928 | 0.757180 | 0.697622 | 是 | 历史对照 |
+| FastSCNN | GID15 normal baseline | 0.469304 | 0.736937 | 0.668483 | 是 | 历史对照 |
+| HRNet | GID15 normal baseline | 0.430103 | 0.722239 | 0.649383 | 是 | 历史对照 |
+| HRNet | stable baseline | 0.474284 | 0.714009 | 0.617053 | 是 | 历史对照 |
+| FastSeg | GID15 normal baseline | 0.129983 | 0.465505 | 0.188082 | 是 | 历史对照 |
+
+说明：
+
+- README 只展示 8 条主要结果，避免首页过长。
+- `当前主线` 指本仓库当前最完整、最建议继续维护的 `paddlers/unet_data_split/` 代码线。
+- 完整表格中还有 cluster-routed data-split、archive、smoke/probe 等记录；这些结果请以 [docs/EXPERIMENT_RESULTS.md](docs/EXPERIMENT_RESULTS.md) 中的来源说明为准。
+
+## 5. 当前主线：Routed UNet
+
+当前主要代码在：
 
 ```text
-release/env/environment.yml
+paddlers/unet_data_split/
 ```
 
-Quick release check:
+核心文件：
 
-```bash
-bash release/scripts/check_release.sh
-```
+- `train.py`：训练入口，支持 single-head / multi-head 配置。
+- `eval_best_model.py`：评估 `best_model`。
+- `infer_best_model.py`：导出推理样例。
+- `cluster_routed_dataset.py`：cluster-routed 数据集加载逻辑。
+- `unet_routed_model.py`：single-head / multi-head routed UNet。
+- `metrics_utils.py`：指标计算、日志和结果导出工具。
 
-Smoke test example:
+配套 release 文件：
 
-```bash
-export GID15_DATASET_ROOT=/path/to/gid15_dataset
+- `release/configs/unet_singlehead_portable.json`
+- `release/configs/unet_multihead_portable.json`
+- `release/scripts/check_release.sh`
+- `release/scripts/start_unet_train_nohup.sh`
+- `release/docs/RUN_TRAIN.md`
+- `release/docs/RUN_INFER.md`
 
-python paddlers/unet_data_split/train.py \
-  --config release/configs/unet_singlehead_portable.json \
-  --run-smoke-test \
-  --device gpu
-```
+## 6. 模型权重说明
 
-Evaluation:
+本 GitHub 仓库不包含训练好的模型权重和训练输出。
 
-```bash
-python paddlers/unet_data_split/eval_best_model.py \
-  --config release/configs/unet_singlehead_portable.json \
-  --save-dir release/runs/unet_singlehead \
-  --device gpu
-```
+未上传的内容包括：
 
-Inference:
+- `*.pdparams`
+- `*.pdopt`
+- `*.pdstates`
+- `*.pth`
+- `*.onnx`
+- `best_model/`
+- `latest_model/`
+- `checkpoints/`
+- `output/`
+- `runs/`
 
-```bash
-python paddlers/unet_data_split/infer_best_model.py \
-  --config release/configs/unet_singlehead_portable.json \
-  --save-dir release/runs/unet_singlehead \
-  --split test \
-  --count 12 \
-  --device gpu
-```
+原因很简单：这些文件体积较大，不适合直接放进普通 GitHub 代码仓库。代码、配置和结果摘要放在 GitHub；模型资产应该单独发布。
 
-Datasets, model weights, checkpoints, and training outputs are intentionally not included in this GitHub version. Prepare the dataset locally and keep generated artifacts outside version control.
+后续模型权重可以单独整理并发布到：
 
-## Model Weights
+- GitHub Release
+- Hugging Face
+- 网盘
+- 服务器下载链接
 
-This repository does not include trained model weights. Model weights will be published separately from the source code.
-
-After downloading a model package, place it in one of these directories:
+下载权重后，建议放置到：
 
 ```text
 release/runs/unet_singlehead/best_model/
 release/runs/unet_multihead/best_model/
 ```
 
-The expected best-model layout is:
+## 7. 环境安装
 
-```text
-best_model/
-  model.pdparams
-  model.pdopt
-  meta.json
-```
-
-Then run inference with:
+推荐使用 conda 环境文件：
 
 ```bash
+git clone https://github.com/RAF163-svg/PADDLERS.git
+cd PADDLERS
+
+conda env create -f release/env/environment.yml
+conda activate paddlers
+pip install -e .
+```
+
+如果已经有可用的 Paddle/PaddleRS 环境，也可以用基础方式安装：
+
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
+
+环境说明：
+
+- `release/env/environment.yml` 是当前 clean 版本保留的可复现环境参考。
+- GPU、CUDA、PaddlePaddle 版本需要和你的机器匹配。
+- `release/env/requirements-freeze.txt` 更适合作为依赖审计参考，不一定适合直接跨机器安装。
+
+## 8. 数据准备
+
+训练、评估和推理都需要准备 GID15 语义分割数据集，并设置环境变量：
+
+```bash
+export GID15_DATASET_ROOT=/path/to/gid15_dataset
+```
+
+数据根目录至少应包含：
+
+```text
+gid15_dataset/
+├── images/
+└── masks/
+```
+
+当前 release 已带有轻量元数据和标签说明，例如：
+
+- `release/data_specs/gid15_dataset/labels.txt`
+- cluster routing 相关元数据
+
+因此，运行主线 routed UNet 时不需要把大体量数据复制进仓库，只需要在本机准备好正式数据目录并设置 `GID15_DATASET_ROOT`。
+
+## 9. 运行训练
+
+先做一次 release 自检：
+
+```bash
+export GID15_DATASET_ROOT=/path/to/gid15_dataset
+bash release/scripts/check_release.sh
+```
+
+single-head 训练：
+
+```bash
+export GID15_DATASET_ROOT=/path/to/gid15_dataset
+CUDA_DEVICE=0 bash release/scripts/start_unet_train_nohup.sh singlehead
+```
+
+multi-head 训练：
+
+```bash
+export GID15_DATASET_ROOT=/path/to/gid15_dataset
+CUDA_DEVICE=0 bash release/scripts/start_unet_train_nohup.sh multihead
+```
+
+前台 smoke test：
+
+```bash
+export GID15_DATASET_ROOT=/path/to/gid15_dataset
+python paddlers/unet_data_split/train.py \
+  --config release/configs/unet_singlehead_portable.json \
+  --run-smoke-test \
+  --device gpu
+```
+
+multi-head smoke test 时把配置换成：
+
+```text
+release/configs/unet_multihead_portable.json
+```
+
+更完整的训练说明见：[release/docs/RUN_TRAIN.md](release/docs/RUN_TRAIN.md)
+
+## 10. 运行评估和推理
+
+评估 single-head `best_model`：
+
+```bash
+export GID15_DATASET_ROOT=/path/to/gid15_dataset
+python paddlers/unet_data_split/eval_best_model.py \
+  --config release/configs/unet_singlehead_portable.json \
+  --save-dir release/runs/unet_singlehead \
+  --device gpu
+```
+
+推理 single-head 样例：
+
+```bash
+export GID15_DATASET_ROOT=/path/to/gid15_dataset
 python paddlers/unet_data_split/infer_best_model.py \
   --config release/configs/unet_singlehead_portable.json \
   --save-dir release/runs/unet_singlehead \
@@ -439,3 +248,36 @@ python paddlers/unet_data_split/infer_best_model.py \
   --count 12 \
   --device gpu
 ```
+
+multi-head 评估和推理时使用：
+
+```text
+release/configs/unet_multihead_portable.json
+release/runs/unet_multihead
+```
+
+更完整的评估和推理说明见：[release/docs/RUN_INFER.md](release/docs/RUN_INFER.md)
+
+## 11. 复现实验需要准备什么
+
+如果要复现 README 中的主线 routed UNet 实验，至少需要：
+
+- 本仓库代码。
+- 可用的 Paddle/PaddleRS 环境。
+- GID15 数据集，并设置 `GID15_DATASET_ROOT`。
+- `release/configs/` 中的 portable config。
+- 如需直接评估或推理，还需要单独下载并放置 `best_model/` 权重。
+
+如果要复现历史对照实验，例如 DeepLabV3+、FarSeg、FastSCNN、FastSeg、HRNet，需要参考 [docs/experiment_results_summary.tsv](docs/experiment_results_summary.tsv) 中记录的配置来源、实验类型、指标来源和备注。部分历史目录只保留了结果摘要或混淆矩阵，未必能仅凭本仓库完全恢复训练过程。
+
+## 12. PaddleRS 来源说明
+
+本项目基于 PaddleRS 进行二次实验开发。PaddleRS 是百度飞桨生态中的遥感影像智能解译开发套件，原项目支持图像分割、目标检测、场景分类、变化检测、图像复原等遥感任务。
+
+本仓库重点不是替代 PaddleRS 官方仓库，而是整理 GID15 语义分割实验代码和结果。PaddleRS 原始项目请参考：
+
+- [PaddlePaddle/PaddleRS](https://github.com/PaddlePaddle/PaddleRS)
+
+## 13. License
+
+本仓库保留 PaddleRS 原项目的 Apache 2.0 许可证。详见 [LICENSE](LICENSE)。
