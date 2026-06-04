@@ -13,6 +13,25 @@
   ![support os](https://img.shields.io/badge/os-linux%2C%20win%2C%20mac-yellow.svg)
 </div>
 
+## GID15 Experiment Results
+
+This clean repository documents the GID15 semantic segmentation experiments without bundling trained model weights or training outputs. The full Chinese summary is available in [docs/EXPERIMENT_RESULTS.md](docs/EXPERIMENT_RESULTS.md), with a machine-readable table in [docs/experiment_results_summary.tsv](docs/experiment_results_summary.tsv).
+
+Model weights are intentionally excluded from GitHub. They should be released separately and placed under `release/runs/unet_singlehead/best_model/` or `release/runs/unet_multihead/best_model/` before running `infer_best_model.py`.
+
+| Experiment | Model | Type | mIoU | OA/accuracy | Kappa |
+| --- | --- | --- | ---: | ---: | ---: |
+| deeplabv3_gid_nromal/output | DeepLabV3+ | GID15 normal baseline | 0.526867 | 0.786168 | 0.732505 |
+| fastseg_gid15_nromal/output | FactSeg/FastSeg | GID15 normal baseline | 0.129983 | 0.465505 | 0.188082 |
+| farseg_gid15_normal/output | FarSeg | GID15 normal baseline | 0.507928 | 0.757180 | 0.697622 |
+| fastscnn_gid15_normal/output | FastSCNN | GID15 normal baseline | 0.469304 | 0.736937 | 0.668483 |
+| hrnet_gid15_normal/output | HRNet | GID15 normal baseline | 0.430103 | 0.722239 | 0.649383 |
+| hrnet_gid15_normal/output_stable | HRNet | GID15 normal baseline | 0.474284 | 0.714009 | 0.617053 |
+| unet_data_split/multihead | UNet | cluster-routed multihead | 0.383720 | 0.723863 | 0.626882 |
+| unet_data_split/singlehead | UNet | cluster-routed singlehead | 0.378758 | 0.724935 | 0.630498 |
+| deeplabv3_data_split/output | DeepLabV3+ | cluster-routed data_split | 0.025525 | 0.025073 | - |
+| deeplabv3_gid_nromal/archive_oversample_mixloss_20260325_165404 | DeepLabV3+ | archive baseline | 0.451574 | 0.712147 | 0.615652 |
+
 ## <img src="docs/images/seg_news_icon.png" width="30"/> 最新动态
 
 *  [2022-11-09] 🔥 PaddleRS发布1.0正式版本，详细发版信息请参考[Release Note](https://github.com/PaddlePaddle/PaddleRS/releases)。
